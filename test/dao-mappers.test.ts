@@ -195,6 +195,23 @@ describe('mapLoanProposal', () => {
     expect(p.votesFor).toBe(2)
   })
 
+  it.each([
+    ['Pending', 2],
+    ['Approved', 3],
+    ['Rejected', 4],
+    ['Executed', 5],
+    ['ApprovedPendingDisbursement', 7],
+    ['Expired', 8],
+    ['Cancelled', 9],
+  ])('maps the %s variant to code %i', (status, code) => {
+    expect(mapTreasuryProposal({ id: 1, amount: BigInt(1), destination: 'GD', status }).status).toBe(code)
+  })
+
+  it('does not map an unrecognised status to an open vote', () => {
+    expect(mapTreasuryProposal({ id: 1, amount: BigInt(1), destination: 'GD', status: 'Mystery' }).status).toBe(0)
+    expect(mapTreasuryProposal({ id: 1, amount: BigInt(1), destination: 'GD' }).status).toBe(0)
+  })
+
   it('defaults hasVoted to false when no voter context is supplied', () => {
     expect(mapLoanProposal({ id: 1 }).hasVoted).toBe(false)
   })

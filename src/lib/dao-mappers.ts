@@ -9,6 +9,8 @@ import {
   GOVERNANCE_PERIOD_FALLBACKS,
   LOAN_POLICY_FALLBACKS,
   PROPOSAL_STATUS_AWAITING_FUNDS,
+  PROPOSAL_STATUS_CANCELLED,
+  PROPOSAL_STATUS_EXPIRED,
 } from '@/constants'
 import {
   loanSchema,
@@ -277,6 +279,18 @@ export interface UITreasuryProposal {
   hasVoted: boolean
 }
 
+/** Every contract `ProposalStatus` variant, explicitly. An unrecognised tag is
+ *  deliberately absent so it maps to 0 (unknown) rather than an open vote. */
+export const TREASURY_STATUS_CODES: Record<string, number> = {
+  Pending: 2,
+  Approved: 3,
+  Rejected: 4,
+  Executed: 5,
+  ApprovedPendingDisbursement: PROPOSAL_STATUS_AWAITING_FUNDS,
+  Expired: PROPOSAL_STATUS_EXPIRED,
+  Cancelled: PROPOSAL_STATUS_CANCELLED,
+}
+
 /** See mapLoanProposal's note on `hasVoted` — same default/override contract.
  *  For a private (commit-reveal) proposal the contract's `has_voted` view
  *  reports true as soon as the voter has committed, without distinguishing
@@ -302,14 +316,7 @@ export function mapTreasuryProposal(raw: Record<string, unknown>, hasVoted = fal
     }
   }
   const v = parsed.data
-  const code =
-    v.status === 'Executed'
-      ? 5
-      : v.status === 'Rejected'
-        ? 4
-        : v.status === 'ApprovedPendingDisbursement'
-          ? PROPOSAL_STATUS_AWAITING_FUNDS
-          : 2
+  const code = TREASURY_STATUS_CODES[v.status] ?? 0
   const reason = v.reason
   return {
     id: v.id,
